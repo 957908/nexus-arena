@@ -51,7 +51,7 @@ export default function App() {
   const [customNotes, setCustomNotes] = useState([]);
   
   // Quiz State
-  const [quizConfig, setQuizConfig] = useState({ subject: 'Java', mode: 'practice', limit: 10 });
+  const [quizConfig, setQuizConfig] = useState({ subject: 'Java', topic: 'All Topics', mode: 'practice', limit: 10 });
   const [activeQuiz, setActiveQuiz] = useState(null);
   
   // Admin panel filter
@@ -59,6 +59,10 @@ export default function App() {
   
   // Theme State
   const [theme, setTheme] = useState('dark');
+
+  // Gemini API Key State
+  const [apiKey, setApiKey] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   function applyTheme(t) {
     const rootEl = document.documentElement;
@@ -95,6 +99,10 @@ export default function App() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
     applyTheme(savedTheme);
+    
+    // Load Gemini API Key
+    const savedKey = localStorage.getItem('gemini_api_key') || '';
+    setApiKey(savedKey);
     
     // Check if user is logged in already
     const savedUser = localStorage.getItem('current_user');
@@ -225,6 +233,7 @@ export default function App() {
           quizInProgress={!!activeQuiz}
           theme={theme}
           toggleTheme={toggleTheme}
+          setSettingsOpen={setSettingsOpen}
         />
       ) : (
         <nav className="glass-panel" style={{ 
@@ -257,25 +266,43 @@ export default function App() {
               color: 'var(--text-primary)'
             }}>Nexus Arena</span>
           </div>
-          <button 
-            onClick={toggleTheme}
-            style={{
-              background: 'var(--panel-bg)',
-              border: '1px solid var(--panel-border)',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: '700',
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'var(--transition-smooth)'
-            }}
-          >
-            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => setSettingsOpen(true)}
+              style={{
+                background: 'var(--panel-bg)',
+                border: '1px solid var(--panel-border)',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                transition: 'var(--transition-smooth)'
+              }}
+            >
+              ⚙️ Settings
+            </button>
+            <button 
+              onClick={toggleTheme}
+              style={{
+                background: 'var(--panel-bg)',
+                border: '1px solid var(--panel-border)',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'var(--transition-smooth)'
+              }}
+            >
+              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            </button>
+          </div>
         </nav>
       )}
       
@@ -290,6 +317,7 @@ export default function App() {
             questions={questions} 
             setPage={setPage} 
             setQuizConfig={setQuizConfig}
+            apiKey={apiKey}
           />
         )}
         
@@ -302,6 +330,7 @@ export default function App() {
             setActiveQuiz={setActiveQuiz}
             saveAttempt={saveQuizAttempt}
             setPage={setPage}
+            apiKey={apiKey}
           />
         )}
         
@@ -323,6 +352,49 @@ export default function App() {
       </main>
       
       <Footer />
+
+      {settingsOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div className="glass-panel animate-scale" style={{ padding: '32px', maxWidth: '500px', width: '90%' }}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-primary)' }}>Gemini AI Settings</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
+              Unlock AI-powered features like dynamic mock test generation and the smart study advisor. Get a free API key from the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-purple)', textDecoration: 'underline' }}>Google AI Studio</a>.
+            </p>
+            
+            <div className="input-group" style={{ marginBottom: '24px' }}>
+              <label>Gemini API Key</label>
+              <input 
+                type="password" 
+                className="input-control" 
+                placeholder="AIzaSy..." 
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button className="btn-secondary" onClick={() => setSettingsOpen(false)}>Cancel</button>
+              <button className="btn-primary" onClick={() => {
+                localStorage.setItem('gemini_api_key', apiKey);
+                setSettingsOpen(false);
+                alert('API Key saved successfully!');
+              }}>Save Settings</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -330,7 +402,7 @@ export default function App() {
 // ==========================================
 // 1. NAVBAR COMPONENT
 // ==========================================
-function Navbar({ user, activePage, setPage, handleLogout, quizInProgress, theme, toggleTheme }) {
+function Navbar({ user, activePage, setPage, handleLogout, quizInProgress, theme, toggleTheme, setSettingsOpen }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
   return (
@@ -410,6 +482,24 @@ function Navbar({ user, activePage, setPage, handleLogout, quizInProgress, theme
                 border: '1px solid rgba(139, 92, 246, 0.2)'
               }}>Admin Panel</span>
           )}
+          
+          <button 
+            onClick={() => setSettingsOpen(true)}
+            style={{
+              background: 'var(--panel-bg)',
+              border: '1px solid var(--panel-border)',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.8rem',
+              marginRight: '8px',
+              transition: 'var(--transition-smooth)'
+            }}
+          >
+            ⚙️ Settings
+          </button>
           
           <button 
             onClick={toggleTheme}
@@ -632,7 +722,7 @@ function LoginRegister({ onLogin, onRegister }) {
 // ==========================================
 // 3. DASHBOARD COMPONENT
 // ==========================================
-function Dashboard({ attempts, questions, setPage, setQuizConfig }) {
+function Dashboard({ attempts, questions, setPage, setQuizConfig, apiKey }) {
   // 1. Calculate overall metrics
   const totalQuizzes = attempts.length;
   const totalCorrect = attempts.reduce((sum, a) => sum + a.score, 0);
@@ -723,7 +813,7 @@ function Dashboard({ attempts, questions, setPage, setQuizConfig }) {
           <button 
             className="btn-primary glow-purple" 
             onClick={() => {
-              setQuizConfig({ subject: suggestion.subject, mode: 'practice', limit: 10 });
+              setQuizConfig({ subject: suggestion.subject, topic: 'All Topics', mode: 'practice', limit: 10 });
               setPage('practice');
             }}
           >
@@ -780,7 +870,7 @@ function Dashboard({ attempts, questions, setPage, setQuizConfig }) {
                     }} />
                   </div>
                   <span style={{ textAlign: 'right', fontWeight: '700', fontSize: '0.9rem', color: stats.total === 0 ? 'var(--text-muted)' : '#fff' }}>
-                    {stats.total > 0 ? `${acc}%` : 'N/A'}
+            {stats.total > 0 ? `${acc}%` : 'N/A'}
                   </span>
                 </div>
               );
@@ -791,6 +881,8 @@ function Dashboard({ attempts, questions, setPage, setQuizConfig }) {
       
       {/* Sidebar: Diagnostics & History */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <AIStudyAdvisor attempts={attempts} apiKey={apiKey} />
+        
         {/* Diagnostics Card */}
         <div className="glass-panel" style={{ padding: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
           <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--text-primary)' }}>Diagnostics Summary</h3>
@@ -878,7 +970,7 @@ function Dashboard({ attempts, questions, setPage, setQuizConfig }) {
 // ==========================================
 // 4. MCQ PORTAL COMPONENT
 // ==========================================
-function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, saveAttempt, setPage }) {
+function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, saveAttempt, setPage, apiKey }) {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [flaggedQuestions, setFlaggedQuestions] = useState({});
   const [currentQIdx, setCurrentQIdx] = useState(0);
@@ -886,18 +978,95 @@ function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, sa
   const [completed, setCompleted] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   
+  // AI Generator Mode States
+  const [useAI, setUseAI] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  
   // Available subjects
   const subjects = [...new Set(questions.map(q => q.subject))];
   
+  // Available topics for the selected subject
+  const topics = ['All Topics', ...new Set(questions.filter(q => q.subject === config.subject).map(q => q.topic).filter(Boolean))];
+  
   // Filter questions for the active quiz
   const getQuizQuestions = () => {
-    const filtered = questions.filter(q => q.subject === config.subject);
+    let filtered = questions.filter(q => q.subject === config.subject);
+    if (config.topic && config.topic !== 'All Topics') {
+      filtered = filtered.filter(q => q.topic === config.topic);
+    }
     // Shuffle and pick limit
     return filtered.slice(0, config.limit);
   };
   
+  const generateAIQuestions = async () => {
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const promptText = `Generate 5 challenging, relevant exam-style multiple-choice questions for CDAC Big Data Analytics (BDA) on the subject "${config.subject}" and topic "${config.topic}".
+Each question must be a multiple choice question with 4 options (A, B, C, D) and cover core conceptual points.
+Ensure the topic matches exactly. Format the response STRICTLY as a raw JSON array of objects, with no markdown backticks, no \`\`\`json wraps, just the raw JSON text.
+JSON Schema:
+[
+  {
+    "question": "question text...",
+    "options": ["Option A content", "Option B content", "Option C content", "Option D content"],
+    "answer": 0, // integer index of correct option (0 for A, 1 for B, 2 for C, 3 for D)
+    "explanation": "Detailed explanation of why this answer is correct."
+  }
+]`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+      
+      if (!response.ok) throw new Error(`API returned status ${response.status}`);
+      const data = await response.json();
+      const text = data.candidates[0].content.parts[0].text;
+      
+      const parsedQs = JSON.parse(text);
+      const finalQs = parsedQs.map((q, idx) => ({
+        id: `ai_gen_${Date.now()}_${idx}`,
+        subject: config.subject,
+        topic: config.topic,
+        question: q.question,
+        options: q.options,
+        answer: parseInt(q.answer),
+        explanation: q.explanation
+      }));
+      
+      if (finalQs.length === 0) throw new Error("No questions were generated by the model.");
+      
+      setActiveQuiz(finalQs);
+      setSelectedAnswers({});
+      setFlaggedQuestions({});
+      setCurrentQIdx(0);
+      setCompleted(false);
+      setTimeSpent(0);
+      
+      if (config.mode === 'exam') {
+        setTimeLeft(finalQs.length * 60);
+      }
+    } catch (err) {
+      console.error(err);
+      setAiError(`Failed to generate questions: ${err.message}. Please verify your API key or connection.`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+  
   // Handle start quiz
   const handleStart = () => {
+    if (useAI && apiKey) {
+      generateAIQuestions();
+      return;
+    }
+    
     const quizQs = getQuizQuestions();
     if (quizQs.length === 0) {
       alert("No questions found for this subject.");
@@ -911,7 +1080,7 @@ function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, sa
     setTimeSpent(0);
     
     if (config.mode === 'exam') {
-      setTimeLeft(config.limit * 60); // 60s per question
+      setTimeLeft(config.limit * 60);
     }
   };
 
@@ -993,6 +1162,32 @@ function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, sa
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  if (aiLoading) {
+    return (
+      <div className="glass-panel animate-fade" style={{ maxWidth: '600px', margin: '40px auto', padding: '40px', textAlign: 'center' }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid rgba(99, 102, 241, 0.1)',
+          borderTop: '4px solid var(--accent-purple)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 20px auto'
+        }} />
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+        <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Generating Questions...</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+          Gemini AI is analyzing BDA syllabus for **{config.subject} ({config.topic})** to generate a custom, high-fidelity mock test. This will take a few seconds.
+        </p>
+      </div>
+    );
+  }
+
   // Quiz Configuration View
   if (!activeQuiz) {
     return (
@@ -1001,16 +1196,43 @@ function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, sa
           Configure MCQ Session
         </h2>
         
+        {aiError && (
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            border: '1px solid rgba(239, 68, 68, 0.2)', 
+            color: 'var(--color-error)', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '20px', 
+            fontSize: '0.9rem',
+            fontWeight: '500'
+          }}>{aiError}</div>
+        )}
+        
         <div className="input-group">
           <label>Select Subject</label>
           <select 
             className="input-control" 
             value={config.subject}
-            onChange={(e) => setConfig({ ...config, subject: e.target.value })}
+            onChange={(e) => setConfig({ ...config, subject: e.target.value, topic: 'All Topics' })}
             style={{ width: '100%' }}
           >
             {subjects.map(sub => (
               <option key={sub} value={sub} style={{ background: 'var(--bg-secondary)', color: '#fff' }}>{sub}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="input-group">
+          <label>Select Topic</label>
+          <select 
+            className="input-control" 
+            value={config.topic || 'All Topics'}
+            onChange={(e) => setConfig({ ...config, topic: e.target.value })}
+            style={{ width: '100%' }}
+          >
+            {topics.map(t => (
+              <option key={t} value={t} style={{ background: 'var(--bg-secondary)', color: '#fff' }}>{t}</option>
             ))}
           </select>
         </div>
@@ -1067,12 +1289,28 @@ function MCQPortal({ questions, config, setConfig, activeQuiz, setActiveQuiz, sa
                   borderColor: config.limit === lim ? 'var(--accent-purple)' : 'var(--panel-border)',
                   background: config.limit === lim ? 'rgba(139, 92, 246, 0.05)' : 'none'
                 }}
+                disabled={useAI}
               >{lim} Qs</button>
             ))}
           </div>
         </div>
+
+        {apiKey && (
+          <div className="input-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--panel-border)', marginBottom: '24px' }}>
+            <input 
+              type="checkbox" 
+              id="useAiCheckbox" 
+              checked={useAI} 
+              onChange={(e) => setUseAI(e.target.checked)}
+              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+            />
+            <label htmlFor="useAiCheckbox" style={{ margin: 0, cursor: 'pointer', color: 'var(--text-primary)', fontWeight: '600', fontSize: '0.85rem' }}>
+              ✨ Ask Gemini AI for Fresh, Dynamic MCQs
+            </label>
+          </div>
+        )}
         
-        <button className="btn-primary glow-purple" onClick={handleStart} style={{ width: '100%', justifyContent: 'center' }}>
+        <button className="btn-primary" onClick={handleStart} style={{ width: '100%', justifyContent: 'center' }}>
           Begin Challenge
         </button>
       </div>
@@ -1788,6 +2026,86 @@ function AdminPanel({ questions, setQuestions, users }) {
             </tbody>
           </table>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// 6.5. AI STUDY ADVISOR WIDGET
+// ==========================================
+function AIStudyAdvisor({ attempts, apiKey }) {
+  const [advice, setAdvice] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (apiKey && attempts.length > 0 && !advice) {
+      fetchAdvice();
+    }
+  }, [apiKey, attempts]);
+
+  const fetchAdvice = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const historyStr = attempts.slice(0, 5).map(a => `${a.subject}: ${a.score}/${a.total} (${Math.round((a.score/a.total)*100)}% accuracy)`).join(', ');
+      
+      const prompt = `The student is preparing for the CDAC Big Data Analytics (BDA) exam.
+Their recent mock test scores are: ${historyStr || 'No tests taken yet'}.
+Provide a highly targeted 3-sentence study advisory listing the most important topics they should focus on and how to study them. Keep it direct, action-oriented and use simple formatting.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      if (!response.ok) throw new Error("Could not contact Gemini");
+      const data = await response.json();
+      const text = data.candidates[0].content.parts[0].text;
+      setAdvice(text);
+    } catch (err) {
+      setError("Unable to load study strategy advice.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!apiKey) {
+    return (
+      <div className="glass-panel" style={{ padding: '20px', background: 'var(--panel-bg)', border: '1px dashed var(--panel-border)' }}>
+        <h4 style={{ fontSize: '0.9rem', marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          ✨ AI Study Advisor
+        </h4>
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+          Connect your Gemini API Key in Settings to get personal AI study recommendations based on your performance.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-panel" style={{ padding: '20px', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-purple)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          ✨ AI Study Advisor
+        </h4>
+        {attempts.length > 0 && !loading && (
+          <button onClick={fetchAdvice} style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: '700' }}>Refresh</button>
+        )}
+      </div>
+      
+      {loading ? (
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Analyzing performance...</p>
+      ) : error ? (
+        <p style={{ fontSize: '0.75rem', color: 'var(--color-error)' }}>{error}</p>
+      ) : advice ? (
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{advice}</p>
+      ) : (
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Take some mock tests to receive personalized study recommendations!</p>
       )}
     </div>
   );
