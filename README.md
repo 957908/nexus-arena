@@ -4,6 +4,29 @@ Nexus Arena is a premium, client-side React application designed for aspirants p
 
 👉 **Live Portal URL**: **[https://957908.github.io/nexus-arena/](https://957908.github.io/nexus-arena/)**
 
+
+---
+
+## 🔄 Study & Practice Workflow
+
+```mermaid
+graph TD
+    A[Start: Study Hub / Cdac-BDA Repo] -->|Read Notes & PPTs| B(Nexus Arena Portal)
+    B --> C{Configure Session}
+    C -->|Select Subject & Topic| D[Choose MCQ Source]
+    D -->|Static Database| E[665+ Course Questions]
+    D -->|✨ Gemini AI Generator| F[Dynamic Fresh Questions]
+    E --> G{Select Mode}
+    F --> G
+    G -->|Practice Mode| H[Instant Answer Feedback & AI Explanations]
+    G -->|Exam Mode| I[Timed Test with Final Performance Summary]
+    H --> J[Submit Quiz Attempts]
+    I --> J
+    J --> K[Dashboard Diagnostics]
+    K -->|Performance History| L[✨ AI Study Advisor Widget]
+    L -->|Personalized BDA Target Syllabus Tips| A
+```
+
 ---
 
 ## ✨ Key Features
